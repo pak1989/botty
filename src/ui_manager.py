@@ -154,19 +154,21 @@ class UiManager():
             if found_btn.name == "PLAY_BTN":
                 # We need to convert the position to monitor coordinates (e.g. if someone is using 2 monitors or windowed mode)
                 x, y = self._screen.convert_screen_to_monitor(found_btn.position)
-                Logger.debug(f"Found Play Btn")
+                Logger.info(f"Found Play Btn")
                 # move the mouse to the play button and randomize the position a bit. +-35 pixel in x direction, +-7 pixel in y direction
                 mouse.move(x, y, randomize=[35, 7], delay_factor=[1.0, 1.8])
                 wait(0.1, 0.15)
                 # click!
                 mouse.click(button="left")
                 break
+            elif found_btn.name == "PLAY_BTN_GRAY":
+                Logger.info(f"Found Gray Play Btn")
+                wait(2)
+                Logger.info(f"New Search Attempt")
+                return self.start_game()
             else:
-                # Might be in online mode?
-                found_btn = self._template_finder.search("PLAY_BTN", img, roi=self._config.ui_roi["play_btn"], threshold=0.8)
-                if found_btn.valid:
-                    Logger.error("Botty only works for single player. Please switch to offline mode and restart botty!")
-                    return False
+                Logger.error("Error While Searching Play Btn")
+                return False
             time.sleep(3.0)
 
         difficulty=self._config.general["difficulty"].upper()
