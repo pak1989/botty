@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # change version
     new_dev_version_code = None
     print(f"Releasing new version: {args.version}")
-    os.system(f"git checkout -b new-release-v{args.version}")
+    # os.system(f"git checkout -b new-release-v{args.version}")
     botty_dir = f"botty_v{args.version}"
     version_code = ""
     with open('src/version.py', 'r') as f:
