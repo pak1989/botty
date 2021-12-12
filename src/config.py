@@ -9,6 +9,10 @@ class Config:
             return self._custom[section][key]
         elif section in self._config:
             return self._config[section][key]
+        elif section in self._pickit_config:
+            return self._pickit_config[section][key]
+        elif section in self._shop_config:
+            return self._shop_config[section][key]
         else:
             return self._game_config[section][key]
 
@@ -17,12 +21,16 @@ class Config:
         # passing a single config instance through bites me in the ass
         self._print_warnings = print_warnings
         self._config = configparser.ConfigParser()
-        self._config.read('params.ini')
+        self._config.read('config/params.ini')
         self._game_config = configparser.ConfigParser()
-        self._game_config.read('game.ini')
+        self._game_config.read('config/game.ini')
+        self._pickit_config = configparser.ConfigParser()
+        self._pickit_config.read('config/pickit.ini')
+        self._shop_config = configparser.ConfigParser()
+        self._shop_config.read('config/shop.ini')
         self._custom = configparser.ConfigParser()
-        if os.environ.get('RUN_ENV') != "test" and os.path.exists('custom.ini'):
-            self._custom.read('custom.ini')
+        if os.environ.get('RUN_ENV') != "test" and os.path.exists('config/custom.ini'):
+            self._custom.read('config/custom.ini')
 
         self.general = {
             "saved_games_folder": self._select_val("general", "saved_games_folder"),
@@ -36,10 +44,16 @@ class Config:
             "logg_lvl": self._select_val("general", "logg_lvl"),
             "randomize_runs": bool(int(self._select_val("general", "randomize_runs"))),
             "difficulty": self._select_val("general", "difficulty"),
-            "custom_discord_hook": self._select_val("general", "custom_discord_hook"),
+            "custom_message_hook": self._select_val("general", "custom_message_hook"),
             "discord_status_count": False if not self._select_val("general", "discord_status_count") else int(self._select_val("general", "discord_status_count")),
             "info_screenshots": bool(int(self._select_val("general", "info_screenshots"))),
             "loot_screenshots": bool(int(self._select_val("general", "loot_screenshots"))),
+        }
+
+        # Added for dclone ip hunting
+        self.dclone = {
+            "region_ips": self._select_val("dclone", "region_ips"),
+            "dclone_hotip": self._select_val("dclone", "dclone_hotip"),
         }
 
         self.routes = {}
@@ -74,6 +88,7 @@ class Config:
             "stash_gold": bool(int(self._select_val("char", "stash_gold"))),
             "gold_trav_only": bool(int(self._select_val("char", "gold_trav_only"))),
             "use_merc": bool(int(self._select_val("char", "use_merc"))),
+            "pre_buff_every_run": bool(int(self._select_val("char", "pre_buff_every_run"))),
             "cta_available": bool(int(self._select_val("char", "cta_available"))),
             "weapon_switch": self._select_val("char", "weapon_switch"),
             "battle_orders": self._select_val("char", "battle_orders"),
@@ -83,9 +98,7 @@ class Config:
             "atk_len_pindle": float(self._select_val("char", "atk_len_pindle")),
             "atk_len_eldritch": float(self._select_val("char", "atk_len_eldritch")),
             "atk_len_shenk": float(self._select_val("char", "atk_len_shenk")),
-            # currently no need to have anything other then static pathing set
-            "static_path_pindle": True,
-            "static_path_eldritch": True,
+            "atk_len_nihlatak": float(self._select_val("char", "atk_len_nihlatak")),
         }
 
         self.sorceress = dict(self._config["sorceress"])
@@ -95,16 +108,20 @@ class Config:
         self.hammerdin = self._config["hammerdin"]
         if "hammerdin" in self._custom:
             self.hammerdin.update(self._custom["hammerdin"])
-        if not self.hammerdin["teleport"]:
-            self.char["static_path_pindle"] = False
-            self.char["static_path_eldritch"] = False
+
+        self.trapsin = self._config["trapsin"]
+        if "trapsin" in self._custom:
+            self.trapsin.update(self._custom["trapsin"])
 
         self.advanced_options = {
             "pathing_delay_factor": min(max(int(self._select_val("advanced_options", "pathing_delay_factor")), 1), 10),
+            "message_headers": self._select_val("advanced_options", "message_headers"),
+            "message_body_template": self._select_val("advanced_options", "message_body_template"),
+            "message_highlight": bool(int(self._select_val("advanced_options", "message_highlight"))),
         }
 
         self.items = {}
-        for key in self._config["items"]:
+        for key in self._pickit_config["items"]:
             self.items[key] = int(self._select_val("items", key))
             if self.items[key] and not os.path.exists(f"./assets/items/{key}.png") and self._print_warnings:
                 print(f"Warning: You activated {key} in pickit, but there is no img available in assets/items")
@@ -125,6 +142,14 @@ class Config:
         for key in self._game_config["path"]:
             self.path[key] = np.reshape(np.array([int(x) for x in self._select_val("path", key).split(",")]), (-1, 2))
 
+        self.shop = {
+            "shop_trap_claws": bool(int(self._select_val("claws", "shop_trap_claws"))),
+            "shop_melee_claws": bool(int(self._select_val("claws", "shop_melee_claws"))),
+            "shop_3_skills_ias_gloves": bool(int(self._select_val("gloves", "shop_3_skills_ias_gloves"))),
+            "shop_2_skills_ias_gloves": bool(int(self._select_val("gloves", "shop_2_skills_ias_gloves"))),
+            "trap_min_score": int(self._select_val("claws", "trap_min_score")),
+            "melee_min_score": int(self._select_val("claws", "melee_min_score")),
+        }
 
 
 if __name__ == "__main__":
